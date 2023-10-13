@@ -3,15 +3,42 @@ package org.example.service;
 import org.example.model.Customer;
 import org.example.model.CustomerTransactions;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class DbService {
+    public static List<Customer> showACustomerWhereTheFirstName(String first_name) throws SQLException {
+        List<Customer> customerList = new ArrayList<>();
+        Connection connection = DbConfig.getConnection();
+
+        // Create a statement object.
+        PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM customers WHERE first_name = ?");
+
+        // Set the SQL statement parameters.
+        preparedStatement.setString(1, first_name);
+
+        // Execute the SQL statement.
+        ResultSet rs = preparedStatement.executeQuery();
+
+        // Process the results of the SQL statement.
+        while (rs.next()) {
+            Customer customer = new Customer();
+            customer.setCustomer_id(rs.getString("customer_id"));
+            customer.setFirst_name(rs.getString("first_name"));
+            customer.setLast_name(rs.getString("last_name"));
+
+            customerList.add(customer);
+
+        }
+
+        // Close the statement and connection objects.
+        preparedStatement.close();
+
+        return customerList;
+    }
+
 
     public static List<CustomerTransactions> showCustomersWithTheirTransactions() {
         List<CustomerTransactions> customerTransactionsList = new ArrayList<>();
