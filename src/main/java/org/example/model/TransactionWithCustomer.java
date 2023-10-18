@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class CustomerTransactions {
-    private Integer transaction_id;
+    private Long transaction_id;
     private Double amount;
     private Customer customer;
 
