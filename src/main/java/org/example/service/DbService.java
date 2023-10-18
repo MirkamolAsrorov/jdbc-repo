@@ -1,7 +1,8 @@
 package org.example.service;
 
 import org.example.model.Customer;
-import org.example.model.CustomerTransactions;
+import org.example.model.TransactionWithCustomer;
+import org.example.model.TransactionWithCustomerId;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -9,6 +10,56 @@ import java.util.List;
 
 
 public class DbService {
+    public static void addCustomers() throws SQLException {
+        Connection connection = DbConfig.getConnection();
+            connection.setAutoCommit(false);
+            Statement statement = connection.createStatement();
+            statement.executeUpdate("INSERT INTO customers(first_name, last_name) VALUES('Federico1234', 'Peter232')");
+            statement.executeUpdate("INSERT INTO customers(first_name, last_name) VALUES('Pol', 'Alien')");
+
+            // if any error occurs, the savepoint will not be committed .
+            Savepoint savepoint1 = connection.setSavepoint("My savePoint");
+            statement.executeUpdate("INSERT INTO customers(first_name, last_name) VALUES('Fe', 'Pe')");
+
+            try {
+                statement.executeUpdate("INSERT INTO customers(customer_id, first_name, last_name) VALUES(1, 'Fedrik', 'Pedro')");
+
+            }catch (SQLException sqlException){
+                connection.rollback(savepoint1);
+
+            }
+
+            connection.commit();
+            connection.close();
+
+        }
+
+
+    public static List<TransactionWithCustomerId> showTransactionWhereId(Long transaction_id) throws SQLException {
+        List<TransactionWithCustomerId> transactionWithCustomerIdList = new ArrayList<>();
+
+        Connection connection = DbConfig.getConnection();
+        PreparedStatement preparedStatement;
+
+        preparedStatement = connection.prepareStatement("SELECT * FROM transactions WHERE transaction_id = ?");
+        preparedStatement.setInt(1, 1);
+        ResultSet resultSet = preparedStatement.executeQuery();
+
+        while (resultSet.next()) {
+            TransactionWithCustomerId transactionWithCustomerId = new TransactionWithCustomerId();
+            transactionWithCustomerId.setTransaction_id(resultSet.getLong("transaction_id"));
+            transactionWithCustomerId.setAmount(resultSet.getDouble("amount"));
+            transactionWithCustomerId.setCustomer_id(resultSet.getLong("customer_id"));
+
+            transactionWithCustomerIdList.add(transactionWithCustomerId);
+
+        }
+        connection.close();
+
+        return transactionWithCustomerIdList;
+    }
+
+
     public static List<Customer> showACustomerWhereTheFirstName(String first_name) throws SQLException {
         List<Customer> customerList = new ArrayList<>();
         Connection connection = DbConfig.getConnection();
@@ -25,7 +76,7 @@ public class DbService {
         // Process the results of the SQL statement.
         while (rs.next()) {
             Customer customer = new Customer();
-            customer.setCustomer_id(rs.getString("customer_id"));
+            customer.setCustomer_id(rs.getLong("customer_id"));
             customer.setFirst_name(rs.getString("first_name"));
             customer.setLast_name(rs.getString("last_name"));
 
@@ -35,15 +86,17 @@ public class DbService {
 
         // Close the statement and connection objects.
         preparedStatement.close();
+        connection.close();
 
         return customerList;
     }
 
 
-    public static List<CustomerTransactions> showCustomersWithTheirTransactions() {
-        List<CustomerTransactions> customerTransactionsList = new ArrayList<>();
+    public static List<TransactionWithCustomer> showCustomersWithTheirTransactions() {
+        List<TransactionWithCustomer> transactionWithCustomerList = new ArrayList<>();
         Connection connection = DbConfig.getConnection();
         Statement statement = null;
+
         try {
             statement = connection.createStatement();
             statement.execute("SELECT transaction_id, amount, first_name, last_name FROM transactions " +
@@ -53,7 +106,7 @@ public class DbService {
             ResultSet resultSet2 = statement.getResultSet();
             while (resultSet2.next()) {
                 Customer customer = new Customer();
-                CustomerTransactions customerTransaction = new CustomerTransactions();
+                TransactionWithCustomer customerTransaction = new TransactionWithCustomer();
 
                 customer.setFirst_name(
                         resultSet2.getString("first_name"));
@@ -61,18 +114,22 @@ public class DbService {
                         resultSet2.getString("last_name"));
 
                 customerTransaction.setTransaction_id(
-                        resultSet2.getInt("transaction_id"));
+                        resultSet2.getLong("transaction_id"));
                 customerTransaction.setAmount(
                         resultSet2.getDouble("amount"));
 
                 customerTransaction.setCustomer(customer);
-                customerTransactionsList.add(customerTransaction);
+                transactionWithCustomerList.add(customerTransaction);
 
             }
+            connection.close();
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
+
         }
-        return customerTransactionsList;
+
+        return transactionWithCustomerList;
     }
 
 
@@ -81,14 +138,13 @@ public class DbService {
         Connection connection = DbConfig.getConnection();
         try {
             Statement statement = connection.createStatement();
-            statement.execute("SELECT * FROM customers");
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM customers");
 
-            ResultSet resultSet = statement.getResultSet();
 
             while (resultSet.next()) {
                 Customer customer = new Customer();
                 customer.setCustomer_id(
-                        resultSet.getString("customer_id"));
+                        resultSet.getLong("customer_id"));
                 customer.setFirst_name(
                         resultSet.getString("first_name"));
                 customer.setLast_name(
@@ -96,8 +152,11 @@ public class DbService {
                 customers.add(customer);
 
             }
+            connection.close();
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
+
         }
 
         return customers;
