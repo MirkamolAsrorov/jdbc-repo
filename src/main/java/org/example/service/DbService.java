@@ -10,6 +10,32 @@ import java.util.List;
 
 
 public class DbService {
+
+    public static void batchThreeOperations(String sql, String sql2, String sql3 ){
+        Connection connection = DbConfig.getConnection();
+        try {
+            connection.setAutoCommit(false);
+
+            Statement statement = connection.createStatement();
+            statement.execute(sql);
+            statement.addBatch(sql);
+
+            statement.execute(sql2);
+            statement.addBatch(sql2);
+
+            statement.execute(sql3);
+            statement.addBatch(sql3);
+
+            connection.commit();
+
+            connection.close();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
     public static void addCustomers() throws SQLException {
         Connection connection = DbConfig.getConnection();
             connection.setAutoCommit(false);
