@@ -4,12 +4,61 @@ import org.example.model.Customer;
 import org.example.model.TransactionWithCustomer;
 import org.example.model.TransactionWithCustomerId;
 
+import javax.swing.plaf.PanelUI;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class DbService {
+
+    public static void navigateData(){
+        String sql = "SELECT * FROM customers LIMIT 10";
+        Connection connection = DbConfig.getConnection();
+        try {
+            Statement statement
+                    = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            ResultSet resultSet = statement.executeQuery(sql);
+            System.out.println("10 rows of the table");
+
+            while (resultSet.next()) {
+                display(resultSet);
+
+            }
+
+            System.out.println("Now, Go to the 2nd row");
+            resultSet.absolute(2);
+            display(resultSet);
+
+            System.out.println("Now, Go to the Previous row - 1st row");
+            resultSet.previous();
+            display(resultSet);
+            resultSet.close();
+
+            statement.close();
+            connection.close();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    public static void display(ResultSet resultSet){
+
+        try {
+            System.out.print("customer_id " + resultSet.getLong(1));
+            System.out.print(" firstName " + resultSet.getString(2));
+            System.out.println(" lastName " + resultSet.getString(3));
+            System.out.println();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+
+        }
+    }
+
+
 
     public static void batchThreeOperations(String sql, String sql2, String sql3 ){
         Connection connection = DbConfig.getConnection();
