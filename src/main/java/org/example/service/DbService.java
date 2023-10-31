@@ -11,6 +11,35 @@ import java.util.List;
 
 
 public class DbService {
+    public static void updateSecondRow(){
+        String sql = "SELECT * FROM customers";
+
+        Connection connection = DbConfig.getConnection();
+        try {
+            Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            ResultSet resultSet = statement.executeQuery(sql);
+            if (resultSet.absolute(2)) {
+                // GO directly 2 row;
+                display(resultSet);
+
+                resultSet.updateString("first_name", "WellMan");
+                resultSet.updateRow();
+
+            }
+            resultSet.beforeFirst();
+            System.out.println("All the rows Table =>");
+            while (resultSet.next()){
+                display(resultSet);
+            }
+
+            resultSet.close();
+            statement.close();
+            connection.close();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public static void navigateData(){
         String sql = "SELECT * FROM customers LIMIT 10";
