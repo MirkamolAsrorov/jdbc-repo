@@ -4,14 +4,50 @@ import org.example.model.Customer;
 import org.example.model.TransactionWithCustomer;
 import org.example.model.TransactionWithCustomerId;
 
-import javax.swing.plaf.PanelUI;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class DbService {
-    public static void updateSecondRow(){
+
+    public static void getInformationAboutTheColumn() {
+        Connection connection = DbConfig.getConnection();
+        try {
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT * FROM customers");
+            ResultSetMetaData metaData = resultSet.getMetaData();
+
+            displayMetaData(metaData, 1);
+            System.out.println();
+
+            displayMetaData(metaData, 1);
+            System.out.println();
+
+            displayMetaData(metaData, 1);
+            System.out.println();
+
+            connection.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public static void displayMetaData(ResultSetMetaData metaData, int columnIndex) {
+        try {
+            System.out.println("Total columns: " + metaData.getColumnCount());
+            System.out.println("Column Name of 1st column: " + metaData.getColumnName(columnIndex));
+            System.out.println("Column Type Name of 1st column: " + metaData.getColumnType(columnIndex));
+            System.out.println("Column Type of 1st column: " + metaData.getColumnType(columnIndex));
+
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+
+        }
+    }
+
+    public static void updateSecondRow() {
         String sql = "SELECT * FROM customers";
 
         Connection connection = DbConfig.getConnection();
@@ -28,7 +64,7 @@ public class DbService {
             }
             resultSet.beforeFirst();
             System.out.println("All the rows Table =>");
-            while (resultSet.next()){
+            while (resultSet.next()) {
                 display(resultSet);
             }
 
@@ -41,7 +77,7 @@ public class DbService {
         }
     }
 
-    public static void navigateData(){
+    public static void navigateData() {
         String sql = "SELECT * FROM customers LIMIT 10";
         Connection connection = DbConfig.getConnection();
         try {
@@ -73,7 +109,7 @@ public class DbService {
     }
 
 
-    public static void display(ResultSet resultSet){
+    public static void display(ResultSet resultSet) {
 
         try {
             System.out.print("customer_id " + resultSet.getLong(1));
@@ -88,8 +124,7 @@ public class DbService {
     }
 
 
-
-    public static void batchThreeOperations(String sql, String sql2, String sql3 ){
+    public static void batchThreeOperations(String sql, String sql2, String sql3) {
         Connection connection = DbConfig.getConnection();
         try {
             connection.setAutoCommit(false);
@@ -116,27 +151,27 @@ public class DbService {
 
     public static void addCustomers() throws SQLException {
         Connection connection = DbConfig.getConnection();
-            connection.setAutoCommit(false);
-            Statement statement = connection.createStatement();
-            statement.executeUpdate("INSERT INTO customers(first_name, last_name) VALUES('Federico1234', 'Peter232')");
-            statement.executeUpdate("INSERT INTO customers(first_name, last_name) VALUES('Pol', 'Alien')");
+        connection.setAutoCommit(false);
+        Statement statement = connection.createStatement();
+        statement.executeUpdate("INSERT INTO customers(first_name, last_name) VALUES('Federico1234', 'Peter232')");
+        statement.executeUpdate("INSERT INTO customers(first_name, last_name) VALUES('Pol', 'Alien')");
 
-            // if any error occurs, the savepoint will not be committed .
-            Savepoint savepoint1 = connection.setSavepoint("My savePoint");
-            statement.executeUpdate("INSERT INTO customers(first_name, last_name) VALUES('Fe', 'Pe')");
+        // if any error occurs, the savepoint will not be committed .
+        Savepoint savepoint1 = connection.setSavepoint("My savePoint");
+        statement.executeUpdate("INSERT INTO customers(first_name, last_name) VALUES('Fe', 'Pe')");
 
-            try {
-                statement.executeUpdate("INSERT INTO customers(customer_id, first_name, last_name) VALUES(1, 'Fedrik', 'Pedro')");
+        try {
+            statement.executeUpdate("INSERT INTO customers(customer_id, first_name, last_name) VALUES(1, 'Fedrik', 'Pedro')");
 
-            }catch (SQLException sqlException){
-                connection.rollback(savepoint1);
-
-            }
-
-            connection.commit();
-            connection.close();
+        } catch (SQLException sqlException) {
+            connection.rollback(savepoint1);
 
         }
+
+        connection.commit();
+        connection.close();
+
+    }
 
 
     public static List<TransactionWithCustomerId> showTransactionWhereId(Long transaction_id) throws SQLException {
