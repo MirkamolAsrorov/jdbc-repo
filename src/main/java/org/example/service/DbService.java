@@ -10,6 +10,67 @@ import java.util.List;
 
 
 public class DbService {
+    public static void showAllViews(){
+        Connection connection = DbConfig.getConnection();
+
+        try {
+            DatabaseMetaData databaseMetaData = connection.getMetaData();
+            String[] views = {"VIEWS"};
+            ResultSet resultSet = databaseMetaData.getTables(null, null, null, views);
+            while (resultSet.next()) {
+                System.out.println(resultSet.getString(3));
+
+            }
+            connection.close();
+
+        }catch (SQLException ex){
+            throw new RuntimeException(ex);
+        }
+
+
+    }
+
+
+    public static void showAllTables() {
+        Connection connection = DbConfig.getConnection();
+        try {
+            DatabaseMetaData databaseMetaData = connection.getMetaData();
+            String[] table = {"TABLE"};
+
+            ResultSet tables = databaseMetaData.getTables(null, null, null, table);
+
+
+            while (tables.next()) {
+                System.out.println(tables.getString(3));
+
+            }
+            connection.close();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public static void getDetailsAboutDatabase() {
+        Connection connection = DbConfig.getConnection();
+
+        try {
+            DatabaseMetaData dbMetaData = connection.getMetaData();
+            System.out.println("Driver Name: " + dbMetaData.getDriverName());
+            System.out.println("Driver Version: " + dbMetaData.getDriverVersion());
+            System.out.println("Username: " + dbMetaData.getUserName());
+            System.out.println("Database product Name: " + dbMetaData.getDatabaseProductName());
+            System.out.println("Database product Ver: " + dbMetaData.getDatabaseProductVersion());
+
+            connection.close();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+
+        }
+    }
+
 
     public static void getInformationAboutTheColumn() {
         Connection connection = DbConfig.getConnection();
