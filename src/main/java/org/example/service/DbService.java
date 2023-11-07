@@ -4,18 +4,66 @@ import org.example.model.Customer;
 import org.example.model.TransactionWithCustomer;
 import org.example.model.TransactionWithCustomerId;
 
+import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 
 public class DbService {
+    public static void retrieveImageFromDatabaseToComputer(String imagePath){
+        Connection connection = DbConfig.getConnection();
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM image");
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+
+                byte[] bytes = resultSet.getBytes("image_data");
+                int bLength = bytes.length;
+
+                FileOutputStream fileOutputStream = new FileOutputStream(imagePath);
+                fileOutputStream.write(bytes,0, bLength);
+
+                fileOutputStream.flush();
+                fileOutputStream.close();
+            }
+            System.out.println("Look at the " + imagePath);
+
+            preparedStatement.close();
+            connection.close();
+
+        } catch (SQLException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public static int storeImageInDatabase(String imagePath){
+        String sql = "INSERT INTO image(image_name, data) VALUES(?,?)";
+
+        Connection connection = DbConfig.getConnection();
+        File file = new File(imagePath);
+        try {
+            FileInputStream fileInputStream = new FileInputStream(file);
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1, file.getName());
+            preparedStatement.setBinaryStream(2, fileInputStream, file.length());
+            int i = preparedStatement.executeUpdate();
+
+            preparedStatement.close();
+            connection.close();
+            return i;
+
+        } catch (FileNotFoundException | SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
     public static void showAllViews(){
         Connection connection = DbConfig.getConnection();
 
         try {
             DatabaseMetaData databaseMetaData = connection.getMetaData();
-            String[] views = {"VIEWS"};
+            String[] views = {"VIEW"};
             ResultSet resultSet = databaseMetaData.getTables(null, null, null, views);
             while (resultSet.next()) {
                 System.out.println(resultSet.getString(3));
