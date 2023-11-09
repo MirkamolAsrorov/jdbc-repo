@@ -11,7 +11,63 @@ import java.util.List;
 
 
 public class DbService {
-    public static void retrieveImageFromDatabaseToComputer(String imagePath){
+    public static void retrieveFileFromDatabaseToComputer(String filePath) {
+        String sql = "SELECT * FROM custom_files";
+        Connection connection = DbConfig.getConnection();
+
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            resultSet.next();
+            File file = new File(filePath);
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+
+            InputStream fileDataInput = resultSet.getBinaryStream("data");
+            int i;
+            while ((i = fileDataInput.read()) != -1) {
+                fileOutputStream.write((i));
+
+            }
+            fileDataInput.close();
+            fileOutputStream.close();
+            resultSet.close();
+            connection.close();
+
+            System.out.println("Look at the " + filePath);
+
+
+        } catch (SQLException | IOException e) {
+            throw new RuntimeException(e);
+        }
+
+
+    }
+
+    public static void storeFileInADb(String filePath) {
+        String sql = "INSERT INTO custom_files(file_name, data) VALUES(?,?)";
+        Connection connection = DbConfig.getConnection();
+        try {
+            File file = new File(filePath);
+            FileInputStream fileInputStream = new FileInputStream(file);
+
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.setString(1, file.getName());
+            preparedStatement.setBinaryStream(2, fileInputStream, file.length());
+            int i = preparedStatement.executeUpdate();
+
+
+            fileInputStream.close();
+            preparedStatement.close();
+            connection.close();
+            System.out.println(i + " INSERT");
+
+        } catch (SQLException | IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public static void retrieveImageFromDatabaseToComputer(String imagePath) {
         Connection connection = DbConfig.getConnection();
         try {
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM image");
@@ -23,7 +79,7 @@ public class DbService {
                 int bLength = bytes.length;
 
                 FileOutputStream fileOutputStream = new FileOutputStream(imagePath);
-                fileOutputStream.write(bytes,0, bLength);
+                fileOutputStream.write(bytes, 0, bLength);
 
                 fileOutputStream.flush();
                 fileOutputStream.close();
@@ -37,7 +93,8 @@ public class DbService {
             throw new RuntimeException(e);
         }
     }
-    public static int storeImageInDatabase(String imagePath){
+
+    public static int storeImageInDatabase(String imagePath) {
         String sql = "INSERT INTO image(image_name, data) VALUES(?,?)";
 
         Connection connection = DbConfig.getConnection();
@@ -48,7 +105,6 @@ public class DbService {
             preparedStatement.setString(1, file.getName());
             preparedStatement.setBinaryStream(2, fileInputStream, file.length());
             int i = preparedStatement.executeUpdate();
-
             preparedStatement.close();
             connection.close();
             return i;
@@ -58,7 +114,8 @@ public class DbService {
         }
 
     }
-    public static void showAllViews(){
+
+    public static void showAllViews() {
         Connection connection = DbConfig.getConnection();
 
         try {
@@ -71,7 +128,7 @@ public class DbService {
             }
             connection.close();
 
-        }catch (SQLException ex){
+        } catch (SQLException ex) {
             throw new RuntimeException(ex);
         }
 
