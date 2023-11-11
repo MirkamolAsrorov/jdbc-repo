@@ -11,6 +11,25 @@ import java.util.List;
 
 
 public class DbService {
+
+
+    public static String callProcedure(){
+        String sqlCall = "CALL create_invoice(?, ?, ?);";
+
+        Connection connection = DbConfig.getConnection();
+        try {
+            CallableStatement callableStatement = connection.prepareCall(sqlCall);
+            callableStatement.setString(1, "Customer 2");
+            callableStatement.setInt(2, 200);
+            callableStatement.setDate(3, Date.valueOf("2023-07-7"));
+            callableStatement.execute();
+        connection.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return "Success";
+
+    }
     public static void retrieveFileFromDatabaseToComputer(String filePath) {
         String sql = "SELECT * FROM custom_files";
         Connection connection = DbConfig.getConnection();
