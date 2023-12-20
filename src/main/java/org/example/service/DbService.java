@@ -3,7 +3,8 @@ package org.example.service;
 import org.example.model.Customer;
 import org.example.model.TransactionWithCustomer;
 import org.example.model.TransactionWithCustomerId;
-
+import javax.sql.rowset.CachedRowSet;
+import javax.sql.rowset.JdbcRowSet;
 import java.io.*;
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,9 +12,59 @@ import java.util.List;
 
 
 public class DbService {
+    public static void getImagesInfo(){
+        String sql = "SELECT image_uuid, image_name FROM image";
+        CachedRowSet cachedRowSet = DbConfig.configureCachedRowSet();
+        try {
+            cachedRowSet.setCommand(sql);
+            cachedRowSet.execute();
 
+            System.out.println("Images Info List");
+            while (cachedRowSet.next()){
+                System.out.println("uuid: " + cachedRowSet.getString(1));
+                System.out.println("name: " + cachedRowSet.getString(2));
+                System.out.println(" ");
+            }
+            cachedRowSet.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
-    public static String callProcedure(){
+    }
+
+    public static void getInvoices() {
+        String sql = "SELECT * FROM invoices";
+
+        JdbcRowSet jdbcRowSet = DbConfig.configureJDBCRowSet();
+        try {
+            jdbcRowSet.setCommand(sql);
+            jdbcRowSet.execute();
+
+            while (jdbcRowSet.next()) {
+                System.out.println("ID: " + jdbcRowSet.getInt(1));
+                System.out.println(" Customer_name " + jdbcRowSet.getString(2));
+                System.out.println(" Amount: " + jdbcRowSet.getDouble(3));
+                System.out.println(" invoice_date: " + jdbcRowSet.getDate(4));
+                System.out.println(" isPaid: " + jdbcRowSet.getBoolean(5));
+                System.out.println();
+                System.out.println("");
+            }
+
+            System.out.println("Accessing randomly");
+            jdbcRowSet.absolute(2);
+            System.out.println(jdbcRowSet.getRow() + "------->" + jdbcRowSet.getString(2) + "\t" + jdbcRowSet.getDouble(3));
+            System.out.println();
+            jdbcRowSet.first();
+            System.out.println(jdbcRowSet.getRow() + "------->" + jdbcRowSet.getString(2) + "\t" + jdbcRowSet.getDouble(3));
+
+            jdbcRowSet.close();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static String callProcedure() {
         String sqlCall = "CALL create_invoice(?, ?, ?);";
 
         Connection connection = DbConfig.getConnection();
@@ -23,13 +74,14 @@ public class DbService {
             callableStatement.setInt(2, 200);
             callableStatement.setDate(3, Date.valueOf("2023-07-7"));
             callableStatement.execute();
-        connection.close();
+            connection.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         return "Success";
 
     }
+
     public static void retrieveFileFromDatabaseToComputer(String filePath) {
         String sql = "SELECT * FROM custom_files";
         Connection connection = DbConfig.getConnection();
